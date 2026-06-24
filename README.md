@@ -1,4 +1,3 @@
-```markdown
 # Riftbound Library
 
 A lightweight, high-performance web application built to manage a shared Riftbound TCG card library. It tracks physical card inventory, ownership, transaction logs (loans/returns), and automatically syncs daily market prices via the TCGPlayer API.
