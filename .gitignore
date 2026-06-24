@@ -1,0 +1,15 @@
+# Database
+tcg.db
+*.sqlite3
+
+# API Keys and Secrets
+data/tcgapi_key.txt
+.env
+
+# Python Virtual Environment
+venv/
+__pycache__/
+*.pyc
+
+# OS generated files
+.DS_Store
