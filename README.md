@@ -8,8 +8,8 @@ A lightweight, high-performance web application built to manage a shared Riftbou
 * **Database:** SQLite3 (`tcg.db`)
 * **Frontend:** Vanilla HTML/JS/CSS (Served natively by FastAPI)
 * **Reverse Proxy / SSL:** Caddy Server
-* **Task Scheduling:** Systemd Timers (Daily Price Sync)
-* **Hosting:** Google Cloud Platform (Ubuntu VM)
+* **Task Scheduling:** Systemd Timers (Daily Price Sync & Database Backups)
+* **Hosting:** Google Cloud Platform (Debian VM)
 
 ---
 
@@ -25,6 +25,7 @@ tcg-app/
 │       └── index.html         # Frontend interface
 ├── data/
 │   └── tcgapi_key.txt         # Secret API key (Ignored by Git)
+├── backup_db.sh               # Shell script executing GCS database exports
 ├── sync_prices.py             # Script to fetch daily market prices
 ├── tcg.db                     # Live SQLite database (Ignored by Git)
 ├── venv/                      # Python virtual environment (Ignored by Git)
@@ -37,7 +38,7 @@ tcg-app/
 
 ## Server Setup & Replication Guide
 
-If you need to deploy this project on a brand-new Ubuntu VM, follow these steps.
+If you need to deploy this project on a brand-new Debian VM, follow these steps.
 
 ### 1. Initial System Setup
 
