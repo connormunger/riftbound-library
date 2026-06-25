@@ -126,16 +126,9 @@ sudo systemctl enable --now tcgapp.service
 
 ```
 
-### 2. The Daily Price Sync (Cron/Timer)
-
-Create the execution service:
-
-```bash
-sudo nano /etc/systemd/system/tcg-prices.service
-
-```
-
-**Contents:**
+### 2. The Daily Price Sync Timer
+Pulls market pricing updates at 01:00 UTC every day.
+- Service (`/etc/systemd/system/tcg-prices.service`):
 
 ```ini
 [Unit]
@@ -149,15 +142,7 @@ WorkingDirectory=/home/connormunger/tcg-app
 ExecStart=/home/connormunger/tcg-app/venv/bin/python /home/connormunger/tcg-app/sync_prices.py
 
 ```
-
-Create the timer to run it daily at 01:00 UTC:
-
-```bash
-sudo nano /etc/systemd/system/tcg-prices.timer
-
-```
-
-**Contents:**
+- Timer (`/etc/systemd/system/tcg-prices.timer`):
 
 ```ini
 [Unit]
@@ -171,12 +156,44 @@ Persistent=true
 WantedBy=timers.target
 
 ```
+### 3. The Daily Database Backup Timer
+Safely clones, compresses, and pushes the live SQLite database file to Google Cloud Storage at 03:00 UTC daily.
+- Service (`/etc/systemd/system/tcg-backup.service`):
 
-Enable the timer:
+```ini
+[Unit]
+Description=Riftbound Database Backup to GCS
+After=network.target
+
+[Service]
+Type=oneshot
+User=connormunger
+WorkingDirectory=/home/connormunger/tcg-app
+ExecStart=/home/connormunger/tcg-app/backup_db.sh
+
+```
+- Timer (`/etc/systemd/system/tcg-prices.timer`):
+
+```ini
+[Unit]
+Description=Run Riftbound Database Backup Daily
+
+[Timer]
+OnCalendar=*-*-* 03:00:00
+Persistent=true
+
+[Install]
+WantedBy=timers.target
+
+```
+
+
+Enable timers using:
 
 ```bash
 sudo systemctl daemon-reload
 sudo systemctl enable --now tcg-prices.timer
+sudo systemctl enable --now tcg-backup.timer
 
 ```
 
@@ -237,10 +254,12 @@ sudo systemctl restart tcgapp
 
 ### Useful Maintenance Commands
 
-* Check web server logs: `sudo journalctl -u tcgapp -n 50 --no-pager`
-* Check price sync logs: `sudo journalctl -u tcg-prices.service -n 50 --no-pager`
-* Force a manual price sync: `sudo systemctl start tcg-prices.service`
-* Interact with the database: `sqlite3 ~/tcg-app/tcg.db`
+- View Web logs: `sudo journalctl -u tcgapp -n 50 --no-pager`
+- View Price Sync logs: `sudo journalctl -u tcg-prices.service -n 50 --no-pager`
+- View Backup logs: `sudo journalctl -u tcg-backup.service -n 50 --no-pager`
+- Force Manual Price Sync: `sudo systemctl start tcg-prices.service`
+- Force Manual Database Backup: `sudo systemctl start tcg-backup.service`
+- Interact with Database: `sqlite3 ~/tcg-app/tcg.db`
 
 ```
 
