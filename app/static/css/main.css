@@ -263,3 +263,70 @@ tr:hover { background: var(--bg-hover); }
   text-align: center;
   color: var(--text-muted);
 }
+
+/* =========================================
+   MOBILE RESPONSIVENESS (< 768px)
+   ========================================= */
+@media (max-width: 768px) {
+  /* 1. Shell & Header Adjustments */
+  .topbar { padding: 0 1.2rem; }
+  .app-shell { flex-direction: column; }
+
+  /* 2. Transform Sidebar into a Tab Bar */
+  .sidebar {
+    width: 100%;
+    flex-direction: row;
+    padding: 0;
+    border-right: none;
+    border-bottom: 1px solid var(--border);
+    transition: none;
+  }
+  .sidebar.hidden { display: none; }
+  .sidebar > div:first-child { display: none; }
+  
+  .nav-btn {
+    flex: 1;
+    justify-content: center;
+    border-radius: 0;
+    border-left: none !important;
+    border-bottom: 2px solid transparent;
+    padding: 14px 8px;
+    margin: 0;
+  }
+  .nav-btn.active {
+    background: transparent;
+    border-bottom: 2px solid var(--accent);
+  }
+
+  /* 3. Edge-to-Edge Main Content */
+  .main-content {
+    padding: 1.5rem 0; /* Remove horizontal padding entirely */
+  }
+  
+  /* Keep padding on the search bar so it doesn't touch the screen edges */
+  .hero-container {
+    padding: 0 1rem; 
+  }
+  .hero-container h1 { font-size: 2rem; }
+  .search-wrapper { flex-direction: column; }
+  .hero-input, .hero-select { width: 100%; border-radius: 12px; }
+  .hero-select { padding: 14px 20px; }
+
+  /* 4. Edge-to-Edge Data Table */
+  .table-container {
+    border-radius: 0;
+    border-left: none;
+    border-right: none;
+    overflow-x: auto; 
+    -webkit-overflow-scrolling: touch;
+  }
+  
+  /* Drastically reduce cell padding to save space */
+  th, td {
+    padding: 10px 6px; 
+    white-space: nowrap; 
+  }
+  th {
+    font-size: 0.7rem; /* Slightly smaller headers */
+  }
+}

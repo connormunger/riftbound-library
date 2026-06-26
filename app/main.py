@@ -1,9 +1,30 @@
+import os
+from dotenv import load_dotenv
+from starlette.middleware.sessions import SessionMiddleware
+from starlette.responses import RedirectResponse
+from fastapi import Request
+from authlib.integrations.starlette_client import OAuth
 from fastapi import FastAPI
 from fastapi.staticfiles import StaticFiles
 from fastapi.responses import FileResponse
 import sqlite3
 
 app = FastAPI()
+
+load_dotenv()
+
+# Enables secure cookies
+app.add_middleware(SessionMiddleware, secret_key=os.environ.get("SECRET_KEY", "fallback-secret"))
+
+# Setup Google OAuth
+oauth = OAuth()
+oauth.register(
+    name='google',
+    server_metadata_url='https://accounts.google.com/.well-known/openid-configuration',
+    client_id=os.environ.get('GOOGLE_CLIENT_ID'),
+    client_secret=os.environ.get('GOOGLE_CLIENT_SECRET'),
+    client_kwargs={'scope': 'openid email profile'}
+)
 
 # Tell FastAPI to serve everything in the static folder publicly at the /static URL
 app.mount("/static", StaticFiles(directory="app/static"), name="static")
@@ -16,6 +37,46 @@ def get_db_connection():
 @app.get("/api/health")
 def health_check():
     return {"status": "healthy", "message": "TCG app backend is online!"}
+
+@app.get("/auth/login")
+async def login(request: Request):
+    # This URL must exactly match what you put in the Google Cloud Console
+    redirect_uri = "https://connormunger.com/auth/callback"
+    return await oauth.google.authorize_redirect(request, redirect_uri)
+
+@app.get("/auth/callback")
+async def auth_callback(request: Request):
+    token = await oauth.google.authorize_access_token(request)
+    user = token.get('userinfo')
+    if user:
+        request.session['user'] = user
+    return RedirectResponse(url='/')
+
+@app.get("/auth/logout")
+def logout(request: Request):
+    request.session.pop('user', None)
+    return RedirectResponse(url='/')
+
+@app.get("/api/me")
+def get_me(request: Request):
+    user = request.session.get('user')
+    if not user:
+        return {"logged_in": False}
+    
+    email = user.get('email')
+    
+    # Check if this email matches a friend in your database
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    cursor.execute("SELECT name FROM users WHERE email = ?", (email,))
+    db_user = cursor.fetchone()
+    conn.close()
+
+    if db_user:
+        return {"logged_in": True, "name": db_user['name'], "email": email}
+    else:
+        # Logged in to Google, but not in your database
+        return {"logged_in": False, "error": "Unauthorized email"}
 
 @app.get("/api/inventory")
 def get_inventory():

@@ -35,16 +35,18 @@ function filterTable() {
     let ownerCls = row.owner_name === 'Library' ? 'tag owner owner-library' : 'tag owner';
     let priceText = row.price ? `$${parseFloat(row.price).toFixed(2)}` : '—';
 
-    return `
-      <tr>
-        <td class="col-card">${escapeHtml(row.card_name)}</td>
-        <td class="col-set">${escapeHtml(row.set_code)} · ${escapeHtml(row.collector_number)}</td>
-        <td style="white-space: nowrap;">${tagsHtml || '<span style="color:var(--text-muted)">—</span>'}</td>
-        <td><span class="${ownerCls}">${escapeHtml(row.owner_name)}</span></td>
-        <td style="font-family:monospace;">${row.quantity}</td>
-        <td class="col-price">${priceText}</td>
-      </tr>
-    `;
+	return `
+      	  <tr>
+            <td>
+              <div class="col-card">${escapeHtml(row.card_name)}</div>
+              <div class="col-set" style="margin-top: 4px;">${escapeHtml(row.set_code)} · ${escapeHtml(row.collector_number)}</div>
+            </td>
+            <td style="white-space: nowrap;">${tagsHtml || '<span style="color:var(--text-muted)">—</span>'}</td>
+            <td><span class="${ownerCls}">${escapeHtml(row.owner_name)}</span></td>
+            <td style="font-family:monospace; text-align:center;">${row.quantity}</td>
+            <td class="col-price">${priceText}</td>
+          </tr>
+    	`;
   }).join('');
 }
 

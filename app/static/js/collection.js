@@ -3,7 +3,7 @@ function calculateStats() {
   let totalValue = 0.0;
   
   globalInventory.forEach(card => {
-    if (card.owner_name === simulatedUser) {
+    if (card.owner_name === currentUser) {
       totalCards += (card.quantity || 0);
       if (card.price) {
         totalValue += (parseFloat(card.price) * (card.quantity || 0));
