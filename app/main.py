@@ -5,6 +5,9 @@ import sqlite3
 
 app = FastAPI()
 
+# Tell FastAPI to serve everything in the static folder publicly at the /static URL
+app.mount("/static", StaticFiles(directory="app/static"), name="static")
+
 def get_db_connection():
     conn = sqlite3.connect('/home/connormunger/tcg-app/tcg.db')
     conn.row_factory = sqlite3.Row 

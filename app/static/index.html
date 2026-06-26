@@ -3,432 +3,98 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Riftbound · Card Library</title>
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,500;0,9..40,600;1,9..40,300&display=swap" rel="stylesheet">
-<script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
-<style>
-  *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
-  :root{
-    --bg:#0d0d0f;--bg2:#141417;--bg3:#1c1c21;
-    --border:rgba(255,255,255,0.08);--border-strong:rgba(255,255,255,0.15);
-    --text:#f0eee8;--text2:#9b998f;--text3:#5a5852;
-    --accent:#c8a96e;--accent2:#8b6b35;--accent-glow:rgba(200,169,110,0.12);
-    --danger:#e05252;--success:#5aad7a;--info:#5a8fad;
-    --radius:8px;--radius-lg:12px;
-  }
-  body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;font-size:14px;line-height:1.6}
-  .header{border-bottom:1px solid var(--border);padding:0 2rem;display:flex;align-items:center;height:56px;position:sticky;top:0;background:var(--bg);z-index:100}
-  .header-brand{display:flex;align-items:center;gap:10px}
-  .brand-icon{width:28px;height:28px;background:linear-gradient(135deg,var(--accent2),var(--accent));border-radius:6px;display:flex;align-items:center;justify-content:center;font-family:'Space Mono',monospace;font-size:13px;color:#0d0d0f;font-weight:700}
-  .brand-name{font-family:'Space Mono',monospace;font-size:13px;letter-spacing:0.08em;color:var(--text);text-transform:uppercase}
-  .layout{display:grid;grid-template-columns:200px 1fr;min-height:calc(100vh - 56px)}
-  .sidebar{border-right:1px solid var(--border);padding:1.5rem 0;position:sticky;top:56px;height:calc(100vh - 56px);overflow-y:auto}
-  .sidebar-section{padding:0 1rem 1.5rem}
-  .sidebar-label{font-family:'Space Mono',monospace;font-size:10px;letter-spacing:0.1em;text-transform:uppercase;color:var(--text3);padding:0 0.5rem;margin-bottom:6px}
-  .nav-item{display:flex;align-items:center;justify-content:space-between;padding:7px 10px;border-radius:var(--radius);cursor:pointer;color:var(--text2);font-size:13px;transition:all 0.12s;user-select:none;border:1px solid transparent}
-  .nav-item:hover{background:var(--bg3);color:var(--text)}
-  .nav-item.active{background:var(--accent-glow);color:var(--accent);border-color:rgba(200,169,110,0.2)}
-  .nav-badge{font-family:'Space Mono',monospace;font-size:10px;background:var(--bg3);color:var(--text3);padding:2px 6px;border-radius:20px;min-width:22px;text-align:center}
-  .nav-item.active .nav-badge{background:rgba(200,169,110,0.15);color:var(--accent)}
-  .filter-group{margin-bottom:0.9rem}
-  .filter-label{font-size:11px;color:var(--text3);margin-bottom:3px;padding:0 2px}
-  .filter-select{width:100%;font-family:'DM Sans',sans-serif;font-size:13px;padding:6px 10px;border-radius:var(--radius);border:1px solid var(--border);background:var(--bg2);color:var(--text);outline:none;transition:border-color 0.15s}
-  .filter-select:focus{border-color:var(--accent2)}
-  .filter-select option{background:var(--bg2)}
-  .main{padding:2rem;overflow:hidden}
-  .page{display:none}
-  .page.active{display:block}
-  .page-header{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:1.5rem;gap:1rem;flex-wrap:wrap}
-  .page-title{font-family:'Space Mono',monospace;font-size:18px;color:var(--text);margin-bottom:4px}
-  .page-subtitle{font-size:13px;color:var(--text2)}
-  .table-wrapper{background:var(--bg2);border:1px solid var(--border);border-radius:var(--radius-lg);overflow:hidden}
-  #inv-table-wrapper{max-width:700px}
-  #log-table-wrapper{max-width:1100px}
-  .table-toolbar{padding:12px 16px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;gap:1rem;flex-wrap:wrap}
-  .toolbar-search{flex:1;min-width:180px;max-width:320px;font-family:'DM Sans',sans-serif;font-size:13px;padding:6px 12px;border-radius:var(--radius);border:1px solid var(--border);background:var(--bg3);color:var(--text);outline:none;transition:border-color 0.15s}
-  .toolbar-search:focus{border-color:var(--accent2)}
-  .toolbar-info{font-size:12px;color:var(--text3);font-family:'Space Mono',monospace;white-space:nowrap}
-  table{width:100%;border-collapse:collapse;font-size:13px}
-  thead th{padding:10px 14px;text-align:left;font-family:'Space Mono',monospace;font-size:10px;letter-spacing:0.08em;text-transform:uppercase;color:var(--text3);border-bottom:1px solid var(--border);white-space:nowrap;cursor:pointer;user-select:none;transition:color 0.12s}
-  thead th:hover{color:var(--text2)}
-  thead th.sort-asc::after{content:' ↑';color:var(--accent)}
-  thead th.sort-desc::after{content:' ↓';color:var(--accent)}
-  .col-name{max-width:100px}
-  .col-tags{width:130px}
-  .col-owner{width:120px}
-  .col-qty{width:52px;text-align:center}
-  .col-price{width:90px;text-align:right}
-  tbody tr{border-bottom:1px solid var(--border);transition:background 0.1s}
-  tbody tr:last-child{border-bottom:none}
-  tbody tr:hover{background:var(--bg3)}
-  .cell-name-stack{display:flex;flex-direction:column;gap:2px;max-width:300px;overflow:hidden}
-  .cell-name{font-weight:500;line-height:1.3;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-  .cell-sub{display:flex;align-items:center;gap:6px;line-height:1}
-  .cell-set{font-family:'Space Mono',monospace;font-size:10px;color:var(--accent);background:var(--accent-glow);padding:1px 5px;border-radius:3px;display:inline-block;letter-spacing:0.04em}
-  .cell-print{font-family:'Space Mono',monospace;font-size:10px;color:var(--text3);white-space:nowrap}
-  .tags-cell{display:flex;flex-wrap:wrap;gap:4px}
-  .badge{font-size:11px;padding:2px 7px;border-radius:20px;font-weight:500;display:inline-block;white-space:nowrap}
-  .badge-holo{background:rgba(90,143,173,0.15);color:var(--info);border:1px solid rgba(90,143,173,0.25)}
-  .badge-promo{background:rgba(200,169,110,0.12);color:var(--accent);border:1px solid rgba(200,169,110,0.2)}
-  .badge-overnumbered{background:rgba(230,200,40,0.15);color:#e6c828;border:1px solid rgba(230,200,40,0.3)}
-  .qty-badge{font-family:'Space Mono',monospace;font-size:12px;padding:3px 7px;border-radius:4px;display:inline-block;min-width:26px;text-align:center;background:var(--bg3);color:var(--text2);border:1px solid var(--border)}
-  .owner-tag{font-size:12px;padding:3px 10px;border-radius:4px;background:var(--bg3);color:var(--text);border:1px solid var(--border);display:inline-block;white-space:nowrap;font-weight:500}
-  .owner-library{background:rgba(200,169,110,0.1);color:var(--accent);border-color:rgba(200,169,110,0.25)}
-  .price-cell{font-family:'Space Mono',monospace;font-size:12px;color:var(--text2);white-space:nowrap}
-  .price-cell.no-price{color:var(--text3)}
-  .no-results{padding:3rem;text-align:center;color:var(--text3);font-family:'Space Mono',monospace;font-size:12px;letter-spacing:0.05em}
-  .log-event{display:inline-flex;align-items:center;gap:5px;font-size:11px;padding:3px 8px;border-radius:4px;font-weight:500}
-  .log-added   {background:rgba(90,173,122,0.12);color:var(--success);border:1px solid rgba(90,173,122,0.2)}
-  .log-removed {background:rgba(224,82,82,0.12);color:var(--danger);border:1px solid rgba(224,82,82,0.2)}
-  .log-loaned  {background:rgba(90,143,173,0.12);color:var(--info);border:1px solid rgba(90,143,173,0.2)}
-  .log-returned{background:rgba(200,169,110,0.12);color:var(--accent);border:1px solid rgba(200,169,110,0.2)}
-  .event-dot{width:5px;height:5px;border-radius:50%;display:inline-block;background:currentColor}
-  .ts-cell{font-family:'Space Mono',monospace;font-size:11px;color:var(--text3);white-space:nowrap}
-  .notes-cell{font-size:12px;color:var(--text3);max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-  .pagination{padding:12px 16px;border-top:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;gap:1rem}
-  .page-controls{display:flex;gap:4px}
-  .page-btn{font-family:'Space Mono',monospace;font-size:11px;padding:5px 10px;border-radius:var(--radius);border:1px solid var(--border);background:transparent;color:var(--text2);cursor:pointer;transition:all 0.12s}
-  .page-btn:hover{background:var(--bg3);color:var(--text)}
-  .page-btn.active{background:var(--accent-glow);color:var(--accent);border-color:rgba(200,169,110,0.3)}
-  .page-btn:disabled{opacity:0.3;cursor:default}
-  .page-info{font-family:'Space Mono',monospace;font-size:11px;color:var(--text3)}
-  .loading{padding:3rem;text-align:center;color:var(--text3);font-family:'Space Mono',monospace;font-size:12px;letter-spacing:0.1em}
-  @media(max-width:700px){
-    .layout{grid-template-columns:1fr}
-    .sidebar{position:static;height:auto;border-right:none;border-bottom:1px solid var(--border);padding:1rem}
-    .main{padding:1rem}
-    .header{padding:0 1rem}
-  }
-</style>
+<title>SC Riftbound</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/static/css/main.css">
+
 </head>
 <body>
 
-<header class="header">
-  <div class="header-brand">
-    <div class="brand-icon">RB</div>
-    <span class="brand-name">Riftbound · Library</span>
-  </div>
-</header>
-
-<div class="layout">
-  <aside class="sidebar">
-    <div class="sidebar-section">
-      <div class="sidebar-label">Views</div>
-      <div class="nav-item active" onclick="showPage('inventory',this)">
-        <span>Inventory</span>
-        <span class="nav-badge" id="badge-inventory">—</span>
-      </div>
-      <div class="nav-item" onclick="showPage('log',this)">
-        <span>Transaction Log</span>
-        <span class="nav-badge" id="badge-log" style="display:none"></span>
-      </div>
+  <!-- Top Navigation -->
+  <nav class="topbar">
+    <div class="brand">
+      <div class="brand-icon">SC</div>
+      Santa Cruz Riftbound Library
     </div>
-    <div class="sidebar-section">
-      <div class="sidebar-label">Filters</div>
-      <div class="filter-group">
-        <div class="filter-label">Owner</div>
-        <select class="filter-select" id="filter-owner" onchange="applyFilters()"><option value="">All owners</option></select>
-      </div>
-      <div class="filter-group">
-        <div class="filter-label">Set</div>
-        <select class="filter-select" id="filter-set" onchange="applyFilters()"><option value="">All sets</option></select>
-      </div>
-      <div class="filter-group">
-        <div class="filter-label">Tags</div>
-        <select class="filter-select" id="filter-tags" onchange="applyFilters()">
-          <option value="">Any</option>
-          <option value="Holo">Holo</option>
-          <option value="Promo">Promo</option>
-          <option value="Overnumbered">Overnumbered</option>
-        </select>
-      </div>
-    </div>
-  </aside>
+    <button class="dev-toggle" onclick="toggleDevLogin()" id="login-btn">Dev: Simulate Login</button>
+  </nav>
 
-  <main class="main">
-    <div class="page active" id="page-inventory">
-      <div class="page-header">
-        <div><div class="page-title">Inventory</div><div class="page-subtitle">Search for a card to see who in the group owns it</div></div>
+  <div class="app-shell">
+    
+    <!-- Sidebar -->
+    <aside class="sidebar hidden" id="sidebar">
+      <div style="padding: 0 16px 16px; color: var(--text-muted); font-size: 0.8rem; border-bottom: 1px solid var(--border); margin-bottom: 8px;">
+        Logged in as <strong style="color:var(--text-main)" id="user-name">Guest</strong>
       </div>
-      <div class="table-wrapper" id="inv-table-wrapper">
-        <div class="table-toolbar">
-          <input type="text" class="toolbar-search" placeholder="Search card name…" id="inv-search" oninput="applyFilters()">
-          <span class="toolbar-info" id="inv-count">— rows</span>
-        </div>
-        <div style="overflow-x:auto">
-          <table><thead><tr>
-            <th class="col-name" onclick="sortTable('inv','card_name')">Card Name</th>
-            <th class="col-tags">Tags</th>
-            <th class="col-owner" onclick="sortTable('inv','owner_name')">Owner</th>
-            <th class="col-qty" onclick="sortTable('inv','quantity')">Qty</th>
-            <th class="col-price" onclick="sortTable('inv','price')">Price</th>
-          </tr></thead><tbody id="inv-tbody"><tr><td colspan="5" class="loading">Loading database...</td></tr></tbody></table>
-        </div>
-        <div class="pagination" id="inv-pagination"></div>
-      </div>
-    </div>
+      <button class="nav-btn active" onclick="switchView('search')" id="nav-search">
+        Library Search
+      </button>
+      <button class="nav-btn" onclick="switchView('collection')" id="nav-collection">
+         My Collection
+      </button>
+    </aside>
 
-    <div class="page" id="page-log">
-      <div class="page-header">
-        <div><div class="page-title">Transaction Log</div><div class="page-subtitle">History of additions, removals, loans, and returns</div></div>
-      </div>
-      <div class="table-wrapper" id="log-table-wrapper">
-        <div class="table-toolbar">
-          <input type="text" class="toolbar-search" placeholder="Search card name or borrower…" id="log-search" oninput="applyLogFilters()">
-          <div style="display:flex;gap:8px;align-items:center">
-            <select class="filter-select" id="log-filter-event" onchange="applyLogFilters()" style="width:140px">
-              <option value="">All events</option>
-              <option value="Added">Added</option>
-              <option value="Removed">Removed</option>
-              <option value="Loaned">Loaned</option>
-              <option value="Returned">Returned</option>
+    <!-- Main Content Area -->
+    <main class="main-content">
+      
+      <!-- VIEW 1: Library Search -->
+      <div id="view-search" class="view active">
+        <div class="hero-container">
+          <h1>Find a Card.</h1>
+          <div class="search-wrapper">
+            <input type="text" class="hero-input" id="search-input" placeholder="Search the library for any card..." oninput="filterTable()">
+            <select class="hero-select" id="set-filter" onchange="filterTable()">
+              <option value="ALL">All Sets</option>
             </select>
-            <span class="toolbar-info" id="log-count">— rows</span>
           </div>
         </div>
-        <div style="overflow-x:auto">
-          <table><thead><tr>
-            <th onclick="sortTable('log','Timestamp')">Timestamp</th>
-            <th>Event</th>
-            <th class="col-name" onclick="sortTable('log','Card Name')">Card Name</th>
-            <th class="col-tags">Tags</th>
-            <th class="col-owner" onclick="sortTable('log','Owner')">Owner</th>
-            <th class="col-qty">Qty</th>
-            <th onclick="sortTable('log','Borrower')">Borrower</th>
-            <th>Notes</th>
-          </tr></thead><tbody id="log-tbody"><tr><td colspan="8" class="loading">Loading log.csv…</td></tr></tbody></table>
+
+        <div class="table-container">
+          <table>
+            <thead>
+              <tr>
+                <th>Card Name</th>
+                <th>Set & Print</th>
+                <th>Tags</th>
+                <th>Owner</th>
+                <th>Qty</th>
+                <th>Market Price</th>
+              </tr>
+            </thead>
+            <tbody id="inventory-tbody">
+              <tr><td colspan="6" style="text-align:center; padding: 3rem; color: var(--text-muted);">Loading database...</td></tr>
+            </tbody>
+          </table>
         </div>
-        <div class="pagination" id="log-pagination"></div>
       </div>
-    </div>
-  </main>
-</div>
 
-<script>
-const PAGE_SIZE=25;
-let inventoryData=[],logData=[];
-let filteredInv=[],filteredLog=[];
-let invPage=1,logPage=1;
-let invSort={col:'card_name',dir:'asc'},logSort={col:'Timestamp',dir:'desc'};
+      <!-- VIEW 2: My Collection -->
+      <div id="view-collection" class="view">
+        <h1 style="font-size: 2rem; margin-bottom: 2rem; font-weight: 600;">My Collection</h1>
+        
+        <div class="dashboard-grid">
+          <div class="stat-card">
+            <h3>Total Physical Cards</h3>
+            <div class="value" id="stat-cards">--</div>
+          </div>
+          <div class="stat-card">
+            <h3>Estimated Value</h3>
+            <div class="value" id="stat-value">$0.00</div>
+          </div>
+        </div>
 
-function showPage(name,el){
-  document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
-  document.querySelectorAll('.nav-item').forEach(n=>n.classList.remove('active'));
-  document.getElementById('page-'+name).classList.add('active');
-  el.classList.add('active');
-}
+        <div class="import-card">
+          <h3 style="color: var(--text-main); margin-bottom: 8px;">Import New Cards</h3>
+          <p style="font-size: 0.9rem; margin-bottom: 16px;">This feature will allow you to quickly add cards to your personal inventory.</p>
+          <button style="background: var(--accent); color: #000; border: none; padding: 10px 20px; border-radius: 8px; font-weight: 600; cursor:not-allowed; opacity: 0.5;">Coming Soon</button>
+        </div>
+      </div>
 
-// Still used exclusively for the old transaction log CSV
-function fetchCSV(path,cb){
-  fetch(path).then(r=>{if(!r.ok)throw new Error();return r.text()})
-    .then(t=>Papa.parse(t,{header:true,skipEmptyLines:true,complete:d=>cb(d.data)}))
-    .catch(()=>cb([]));
-}
+    </main>
+  </div>
 
-function renderPrice(r){
-  if(r.price === undefined || r.price === null) return '<span class="price-cell no-price">—</span>';
-  const val=parseFloat(r.price);
-  if(isNaN(val)) return '<span class="price-cell no-price">—</span>';
-  return `<span class="price-cell">$${val.toFixed(2)}</span>`;
-}
-
-function esc(s){return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
-
-function processInventory(){
-  const owners=[...new Set(inventoryData.map(r=>r.owner_name).filter(Boolean))].sort();
-  const sets=[...new Set(inventoryData.map(r=>r.set_code).filter(Boolean))].sort();
-  document.getElementById('filter-owner').innerHTML=
-    '<option value="">All owners</option>'+owners.map(o=>`<option value="${o}">${o}</option>`).join('');
-  document.getElementById('filter-set').innerHTML=
-    '<option value="">All sets</option>'+sets.map(s=>`<option value="${s}">${s}</option>`).join('');
-  const total=inventoryData.reduce((s,r)=>s+(parseInt(r.quantity)||0),0);
-  document.getElementById('badge-inventory').textContent=total;
-  applyFilters();
-}
-
-function processLog(){
-  logData.sort((a,b)=>new Date(b['Timestamp'])-new Date(a['Timestamp']));
-  applyLogFilters();
-}
-
-function applyFilters(){
-  const search=(document.getElementById('inv-search')?.value||'').toLowerCase();
-  const owner=document.getElementById('filter-owner')?.value||'';
-  const set=document.getElementById('filter-set')?.value||'';
-  const tag=document.getElementById('filter-tags')?.value||'';
-  filteredInv=inventoryData.filter(r=>{
-    if(search&&!r.card_name?.toLowerCase().includes(search)) return false;
-    if(owner&&r.owner_name!==owner) return false;
-    if(set&&r.set_code!==set) return false;
-    if(tag&&!getTags(r).includes(tag)) return false;
-    return true;
-  });
-  sortData(filteredInv,invSort.col,invSort.dir);
-  invPage=1; renderInventory();
-}
-
-function applyLogFilters(){
-  const search=(document.getElementById('log-search')?.value||'').toLowerCase();
-  const event=document.getElementById('log-filter-event')?.value||'';
-  filteredLog=logData.filter(r=>{
-    if(search&&!r['Card Name']?.toLowerCase().includes(search)&&!r['Borrower']?.toLowerCase().includes(search)) return false;
-    if(event&&r['Event Type']!==event) return false;
-    return true;
-  });
-  logPage=1; renderLog();
-}
-
-function sortData(arr,col,dir){
-  arr.sort((a,b)=>{
-    let av,bv;
-    if(col==='price'){
-      av=(a.price!==null && a.price!==undefined)?parseFloat(a.price):-1;
-      bv=(b.price!==null && b.price!==undefined)?parseFloat(b.price):-1;
-      if(isNaN(av)) av=-1;
-      if(isNaN(bv)) bv=-1;
-    } else if(col==='quantity' || col==='Quantity') {
-      av=parseInt(a[col])||0; bv=parseInt(b[col])||0;
-    } else {
-      av=a[col]||''; bv=b[col]||'';
-    }
-    if(av<bv) return dir==='asc'?-1:1;
-    if(av>bv) return dir==='asc'?1:-1;
-    return 0;
-  });
-}
-
-function sortTable(tbl,col){
-  if(tbl==='inv'){
-    invSort.dir=invSort.col===col&&invSort.dir==='asc'?'desc':'asc';
-    invSort.col=col;sortData(filteredInv,col,invSort.dir);renderInventory();
-  }else{
-    logSort.dir=logSort.col===col&&logSort.dir==='asc'?'desc':'asc';
-    logSort.col=col;sortData(filteredLog,col,logSort.dir);renderLog();
-  }
-}
-
-function getTags(r){
-  const t=[];
-  if(r.is_holo)t.push('Holo');
-  if(r.is_promo)t.push('Promo');
-  if(r.is_overnumbered)t.push('Overnumbered');
-  return t;
-}
-
-// Log tags still use the old CSV string format
-function getLogTags(r){
-  const t=[];
-  if(r['Holo']==='Yes')t.push('Holo');
-  if(r['Promo']==='Yes')t.push('Promo');
-  if((r['Overnumbered']||'').toUpperCase()==='TRUE')t.push('Overnumbered');
-  return t;
-}
-
-function renderTags(tags){
-  if(!tags.length) return '<span style="color:var(--text3);font-size:11px;">—</span>';
-  const cls = t => t==='Holo' ? 'badge-holo' : t==='Promo' ? 'badge-promo' : 'badge-overnumbered';
-  return '<div class="tags-cell">'+tags.map(t=>`<span class="badge ${cls(t)}">${t}</span>`).join('')+'</div>';
-}
-
-function renderInventory(){
-  const tbody=document.getElementById('inv-tbody');
-  if(!filteredInv.length){
-    tbody.innerHTML=`<tr><td colspan="5" class="no-results">No cards found</td></tr>`;
-    document.getElementById('inv-count').textContent='0 rows';
-    renderPagination('inv',0);return;
-  }
-  const start=(invPage-1)*PAGE_SIZE;
-  const slice=filteredInv.slice(start,start+PAGE_SIZE);
-  tbody.innerHTML=slice.map(r=>{
-    const tags=getTags(r);const isLib=r.owner_name==='Library';
-    return `<tr>
-      <td class="col-name"><div class="cell-name-stack">
-        <span class="cell-name" title="${esc(r.card_name||'')}">${esc(r.card_name||'')}</span>
-        <div class="cell-sub"><span class="cell-set">${esc(r.set_code||'')}</span><span class="cell-print">${esc(r.collector_number||'')}</span></div>
-      </div></td>
-      <td>${renderTags(tags)}</td>
-      <td><span class="owner-tag ${isLib?'owner-library':''}">${esc(r.owner_name||'')}</span></td>
-      <td><span class="qty-badge">${parseInt(r.quantity)||0}</span></td>
-      <td>${renderPrice(r)}</td>
-    </tr>`;
-  }).join('');
-  document.getElementById('inv-count').textContent=`${filteredInv.length} rows`;
-  renderPagination('inv',filteredInv.length);
-}
-
-function renderLog(){
-  const tbody=document.getElementById('log-tbody');
-  if(!filteredLog.length){
-    tbody.innerHTML=`<tr><td colspan="8" class="no-results">No log entries found</td></tr>`;
-    document.getElementById('log-count').textContent='0 rows';
-    renderPagination('log',0);return;
-  }
-  const start=(logPage-1)*PAGE_SIZE;
-  const slice=filteredLog.slice(start,start+PAGE_SIZE);
-  tbody.innerHTML=slice.map(r=>{
-    const ev=r['Event Type']||'';
-    const evCls={Added:'log-added',Removed:'log-removed',Loaned:'log-loaned',Returned:'log-returned'}[ev]||'';
-    const isLib=r['Owner']==='Library';
-    return `<tr>
-      <td class="ts-cell">${esc(r.timestamp||'')}</td>
-      <td><span class="log-event ${evCls}"><span class="event-dot"></span>${esc(ev)}</span></td>
-      <td class="col-name"><div class="cell-name-stack">
-        <span class="cell-name" title="${esc(r.card_name||'')}">${esc(r.card_name||'')}</span>
-        <div class="cell-sub"><span class="cell-set">${esc(r.set_code||'')}</span><span class="cell-print">${esc(r.collector_number||'')}</span></div>
-      </div></td>
-      <td>${renderTags(getTags(r))}</td>
-      <td><span class="owner-tag ${isLib?'owner-library':''}">${esc(r.owner_name||'')}</span></td>
-      <td><span class="qty-badge">${esc(r.quantity||'')}</span></td>
-      <td style="font-size:12px;color:var(--info)">${esc(r.borrower||'—')}</td>
-      <td class="notes-cell" title="${esc(r.notes||'')}">${esc(r.notes||'')}</td>
-    </tr>`;
-  }).join('');
-  document.getElementById('log-count').textContent=`${filteredLog.length} rows`;
-  renderPagination('log',filteredLog.length);
-}
-
-function renderPagination(tbl,total){
-  const totalPages=Math.ceil(total/PAGE_SIZE);
-  const cur=tbl==='inv'?invPage:logPage;
-  const el=document.getElementById(tbl+'-pagination');
-  if(totalPages<=1){el.innerHTML='';return;}
-  const prev=`<button class="page-btn" onclick="changePage('${tbl}',${cur-1})" ${cur===1?'disabled':''}>← Prev</button>`;
-  const next=`<button class="page-btn" onclick="changePage('${tbl}',${cur+1})" ${cur===totalPages?'disabled':''}>Next →</button>`;
-  const pages=Array.from({length:Math.min(7,totalPages)},(_,i)=>{
-    const p=i+1;return `<button class="page-btn ${p===cur?'active':''}" onclick="changePage('${tbl}',${p})">${p}</button>`;
-  }).join('');
-  el.innerHTML=`<span class="page-info">Page ${cur} of ${totalPages}</span><div class="page-controls">${prev}${pages}${next}</div>`;
-}
-
-function changePage(tbl,page){
-  const total=tbl==='inv'?filteredInv.length:filteredLog.length;
-  const max=Math.ceil(total/PAGE_SIZE);
-  if(page<1||page>max)return;
-  if(tbl==='inv'){invPage=page;renderInventory();}else{logPage=page;renderLog();}
-}
-
-// Fetch new JSON API for Inventory
-fetch('/api/inventory')
-  .then(res => res.json())
-  .then(data => {
-    inventoryData = data;
-    processInventory();
-  })
-  .catch(err => {
-    console.error("Failed to load inventory from API", err);
-    document.getElementById('inv-tbody').innerHTML=`<tr><td colspan="5" class="no-results">Failed to load database.</td></tr>`;
-  });
-
-// Fetch old CSV for Log
-fetch('/api/logs')
-  .then(res => res.json())
-  .then(data => {
-    logData = data;
-    processLog();
-  })
-  .catch(err => console.error("Failed to load logs", err));
-</script>
+<script src="/static/js/app.js"></script>
+<script src="/static/js/search.js"></script>
+<script src="/static/js/collection.js"></script>
 </body>
 </html>

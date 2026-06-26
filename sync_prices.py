@@ -78,7 +78,7 @@ def sync_prices():
         if isinstance(prices, dict):
             prices = [prices]
 
-	now = datetime.now(timezone.utc).isoformat()
+        now = datetime.now(timezone.utc).isoformat()
         updated_printings = []
         
         # Save EVERY valid market price (Normal and Foil) independently
