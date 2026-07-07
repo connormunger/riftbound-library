@@ -20,7 +20,13 @@ function filterTable() {
                          (card.owner_name || '').toLowerCase().includes(query);
     const matchesSet = (selectedSet === 'ALL') || (card.set_code === selectedSet);
     return matchesQuery && matchesSet;
-  });
+});
+
+// Sort alphabetically by card name
+filtered.sort((a, b) =>
+    (a.card_name || '').localeCompare(b.card_name || '', undefined, { sensitivity: 'base' })
+);
+
 
   if (filtered.length === 0) {
     tbody.innerHTML = `<tr><td colspan="6" style="text-align:center; padding: 3rem; color: var(--text-muted);">No cards found matching your filters.</td></tr>`;
