@@ -1,6 +1,7 @@
 import os
 from dotenv import load_dotenv
 from starlette.middleware.sessions import SessionMiddleware
+from uvicorn.middleware.proxy_headers import ProxyHeadersMiddleware
 from starlette.responses import RedirectResponse
 from fastapi import Request
 from authlib.integrations.starlette_client import OAuth
@@ -12,9 +13,15 @@ import sqlite3
 app = FastAPI()
 
 load_dotenv()
+app.add_middleware(ProxyHeadersMiddleware, trusted_hosts="*")
 
 # Enables secure cookies
-app.add_middleware(SessionMiddleware, secret_key=os.environ.get("SECRET_KEY", "fallback-secret"))
+app.add_middleware(
+    SessionMiddleware, 
+    secret_key=os.environ.get("SECRET_KEY", "fallback-secret"),
+    same_site="lax",
+    https_only=True
+)
 
 # Setup Google OAuth
 oauth = OAuth()
@@ -25,9 +32,6 @@ oauth.register(
     client_secret=os.environ.get('GOOGLE_CLIENT_SECRET'),
     client_kwargs={'scope': 'openid email profile'}
 )
-
-# Tell FastAPI to serve everything in the static folder publicly at the /static URL
-app.mount("/static", StaticFiles(directory="app/static"), name="static")
 
 def get_db_connection():
     conn = sqlite3.connect('/home/connormunger/tcg-app/tcg.db')
@@ -118,7 +122,7 @@ def get_logs():
             c.name as card_name,
             c.set_code,
             c.collector_number,
-            c.is_overnumbered,
+            c.is_overnumbered,   
             t.is_holo,
             t.is_promo,
             u.name as owner_name,
