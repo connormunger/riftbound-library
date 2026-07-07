@@ -93,6 +93,7 @@ def get_inventory():
             c.collector_number, 
             c.name as card_name,
             c.tcgplayer_id,
+            c.rarity,
             c.is_alt_art, 
             c.is_signature, 
             c.is_overnumbered,

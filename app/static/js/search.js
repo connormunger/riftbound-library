@@ -29,8 +29,23 @@ function filterTable() {
 
   tbody.innerHTML = filtered.map(row => {
     let tagsHtml = '';
-    if (row.is_holo) tagsHtml += `<span class="tag holo">Foil</span>`;
-    if (row.is_promo) tagsHtml += `<span class="tag holo" style="color:#e05252; border-color: rgba(224,82,82,0.3); background: rgba(224,82,82,0.1);">Promo</span>`;
+    
+    // Priority 1: Promo
+    if (row.is_promo) {
+      tagsHtml = `<span class="tag holo" style="color:#e05252; border-color: rgba(224,82,82,0.3); background: rgba(224,82,82,0.1);">Promo</span>`;
+    } 
+    // Priority 2: Overnumbered (ON)
+    else if (row.is_overnumbered) {
+      tagsHtml = `<span class="tag holo" style="color:#f59e0b; border-color: rgba(245,158,11,0.3); background: rgba(245,158,11,0.1);">ON</span>`;
+    } 
+    // Priority 3: Foil (ONLY if Common or Uncommon)
+    else if (row.is_holo && (row.rarity === 'Common' || row.rarity === 'Uncommon')) {
+      tagsHtml = `<span class="tag holo">Foil</span>`;
+    } 
+    // Default: No tag
+    else {
+      tagsHtml = '<span style="color:var(--text-muted)">—</span>';
+    }
     
     let ownerCls = row.owner_name === 'Library' ? 'tag owner owner-library' : 'tag owner';
     let priceText = row.price ? `$${parseFloat(row.price).toFixed(2)}` : '—';
